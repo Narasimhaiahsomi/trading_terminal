@@ -24,13 +24,6 @@ const App = {
                 case "a": case "A": Alerts.openModal(); break;
                 case "r": case "R": this.refresh(); break;
                 case "Escape": this.closeSearch(); this.closeDetail(); Alerts.closeModal(); break;
-                case "1": this.switchTab("screener"); break;
-                case "2": this.switchTab("volatile"); break;
-                case "3": this.switchTab("active"); break;
-                case "4": this.switchTab("losers"); break;
-                case "5": this.switchTab("afterhours"); break;
-                case "6": this.switchTab("squeeze"); break;
-                case "7": this.switchTab("learn"); break;
             }
         });
     },
@@ -39,15 +32,26 @@ const App = {
         this.currentTab = tab;
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
         document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + tab));
-        switch (tab) {
-            case "screener": Screener.load(Screener.getFilters()); break;
-            case "volatile": Panels.loadVolatile(); break;
-            case "active": Panels.loadActive(); break;
-            case "losers": Panels.loadLosers(); break;
-            case "afterhours": Panels.loadAfterHours(); break;
-            case "squeeze": Panels.loadSqueeze(); break;
-            case "learn": Panels.loadLearn(); break;
-        }
+        const loaders = {
+            screener: () => Screener.load(Screener.getFilters()),
+            gainers: () => Panels.loadGainers(),
+            losers: () => Panels.loadLosers(),
+            active: () => Panels.loadActive(),
+            volatile: () => Panels.loadVolatile(),
+            trending: () => Panels.loadTrending(),
+            unusualvol: () => Panels.loadUnusualVol(),
+            dividend: () => Panels.loadDividend(),
+            smallcap: () => Panels.loadSmallCap(),
+            largecap: () => Panels.loadLargeCap(),
+            expensive: () => Panels.loadExpensive(),
+            highbeta: () => Panels.loadHighBeta(),
+            "52wgainers": () => Panels.load52wGainers(),
+            "52wlosers": () => Panels.load52wLosers(),
+            afterhours: () => Panels.loadAfterHours(),
+            squeeze: () => Panels.loadSqueeze(),
+            learn: () => Panels.loadLearn(),
+        };
+        if (loaders[tab]) loaders[tab]();
     },
 
     async loadMarketOverview() {
@@ -237,6 +241,13 @@ const App = {
             ).join("");
             if (!tickers.length) results.innerHTML = '<div class="search-item">No results</div>';
         } catch (e) { results.innerHTML = '<div class="search-item">Error searching</div>'; }
+    },
+
+    toggleWatchlistPanel() {
+        const panel = document.getElementById("watchlist-panel");
+        const toggle = document.getElementById("wl-toggle-bar");
+        panel.classList.toggle("collapsed");
+        toggle.classList.toggle("show");
     },
 
     promptAddWatchlist() {

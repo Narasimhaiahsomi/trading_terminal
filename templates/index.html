@@ -17,11 +17,20 @@
 
     <!-- MAIN LAYOUT -->
     <div class="main-layout">
+        <!-- WATCHLIST TOGGLE (shown when collapsed) -->
+        <div class="wl-toggle-bar" id="wl-toggle-bar" onclick="App.toggleWatchlistPanel()">
+            <span>▶</span>
+            <span class="wl-toggle-label">W<br>A<br>T<br>C<br>H</span>
+        </div>
+
         <!-- WATCHLIST SIDEBAR -->
-        <div class="watchlist-panel">
+        <div class="watchlist-panel" id="watchlist-panel">
             <div class="wl-header">
                 <h3>WATCHLIST</h3>
-                <button onclick="App.promptAddWatchlist()">+ ADD</button>
+                <div>
+                    <button onclick="App.promptAddWatchlist()">+ ADD</button>
+                    <button onclick="App.toggleWatchlistPanel()" title="Hide watchlist">◀</button>
+                </div>
             </div>
             <div id="watchlist-items">
                 <div class="wl-empty">Loading...</div>
@@ -31,19 +40,39 @@
         <!-- SCREENER / TABS AREA -->
         <div class="screener-area">
             <div class="tab-bar">
-                <button class="tab-btn active" data-tab="screener">1 SCREENER</button>
-                <button class="tab-btn" data-tab="volatile">2 VOLATILE</button>
-                <button class="tab-btn" data-tab="active">3 ACTIVE</button>
-                <button class="tab-btn" data-tab="losers">4 LOSERS</button>
-                <button class="tab-btn" data-tab="afterhours">5 AFTER HRS</button>
-                <button class="tab-btn" data-tab="squeeze">6 SHORT SQUEEZE</button>
-                <button class="tab-btn" data-tab="learn">7 LEARN</button>
+                <button class="tab-btn active" data-tab="screener">SCREENER</button>
+                <button class="tab-btn" data-tab="gainers">GAINERS</button>
+                <button class="tab-btn" data-tab="losers">LOSERS</button>
+                <button class="tab-btn" data-tab="active">MOST ACTIVE</button>
+                <button class="tab-btn" data-tab="volatile">VOLATILE</button>
+                <button class="tab-btn" data-tab="trending">TRENDING</button>
+                <button class="tab-btn" data-tab="unusualvol">UNUSUAL VOL</button>
+                <button class="tab-btn" data-tab="dividend">DIVIDEND</button>
+                <button class="tab-btn" data-tab="smallcap">SMALL CAP</button>
+                <button class="tab-btn" data-tab="largecap">LARGE CAP</button>
+                <button class="tab-btn" data-tab="expensive">EXPENSIVE</button>
+                <button class="tab-btn" data-tab="highbeta">HIGH BETA</button>
+                <button class="tab-btn" data-tab="52wgainers">52W GAINERS</button>
+                <button class="tab-btn" data-tab="52wlosers">52W LOSERS</button>
+                <button class="tab-btn" data-tab="afterhours">AFTER HRS</button>
+                <button class="tab-btn" data-tab="squeeze">SHORT SQUEEZE</button>
+                <button class="tab-btn" data-tab="learn">LEARN</button>
             </div>
             <div class="tab-content">
                 <div class="tab-panel active" id="tab-screener"><div class="loading">LOADING...</div></div>
-                <div class="tab-panel" id="tab-volatile"></div>
-                <div class="tab-panel" id="tab-active"></div>
+                <div class="tab-panel" id="tab-gainers"></div>
                 <div class="tab-panel" id="tab-losers"></div>
+                <div class="tab-panel" id="tab-active"></div>
+                <div class="tab-panel" id="tab-volatile"></div>
+                <div class="tab-panel" id="tab-trending"></div>
+                <div class="tab-panel" id="tab-unusualvol"></div>
+                <div class="tab-panel" id="tab-dividend"></div>
+                <div class="tab-panel" id="tab-smallcap"></div>
+                <div class="tab-panel" id="tab-largecap"></div>
+                <div class="tab-panel" id="tab-expensive"></div>
+                <div class="tab-panel" id="tab-highbeta"></div>
+                <div class="tab-panel" id="tab-52wgainers"></div>
+                <div class="tab-panel" id="tab-52wlosers"></div>
                 <div class="tab-panel" id="tab-afterhours"></div>
                 <div class="tab-panel" id="tab-squeeze"></div>
                 <div class="tab-panel" id="tab-learn"></div>
@@ -86,7 +115,6 @@
             <span><kbd>W</kbd> Watchlist</span>
             <span><kbd>A</kbd> Alerts</span>
             <span><kbd>R</kbd> Refresh</span>
-            <span><kbd>1</kbd>-<kbd>7</kbd> Tabs</span>
             <span><kbd>Esc</kbd> Close</span>
         </div>
         <span id="last-update">Loading...</span>

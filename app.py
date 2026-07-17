@@ -5,6 +5,9 @@ from data_sources import (
     get_stock_info, get_quotes, get_market_overview, get_sectors,
     get_history, get_most_volatile, get_most_active, get_biggest_losers,
     get_after_hours_movers, get_short_squeeze_candidates, get_stock_news,
+    get_day_gainers, get_trending, get_highest_dividend, get_small_cap,
+    get_large_cap, get_most_expensive, get_highest_beta, get_unusual_volume,
+    get_52w_gainers, get_52w_losers,
     ALL_UNIVERSE
 )
 
@@ -92,6 +95,66 @@ def api_losers():
 def api_after_hours():
     limit = int(request.args.get("limit", 20))
     return jsonify(get_after_hours_movers(limit))
+
+
+@app.route("/api/gainers")
+def api_gainers():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_day_gainers(limit))
+
+
+@app.route("/api/trending")
+def api_trending():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_trending(limit))
+
+
+@app.route("/api/dividend")
+def api_dividend():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_highest_dividend(limit))
+
+
+@app.route("/api/small-cap")
+def api_small_cap():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_small_cap(limit))
+
+
+@app.route("/api/large-cap")
+def api_large_cap():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_large_cap(limit))
+
+
+@app.route("/api/expensive")
+def api_expensive():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_most_expensive(limit))
+
+
+@app.route("/api/high-beta")
+def api_high_beta():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_highest_beta(limit))
+
+
+@app.route("/api/unusual-volume")
+def api_unusual_volume():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_unusual_volume(limit))
+
+
+@app.route("/api/52w-gainers")
+def api_52w_gainers():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_52w_gainers(limit))
+
+
+@app.route("/api/52w-losers")
+def api_52w_losers():
+    limit = int(request.args.get("limit", 20))
+    return jsonify(get_52w_losers(limit))
 
 
 @app.route("/api/short-squeeze")

@@ -1,4 +1,184 @@
 const Panels = {
+    async loadGainers() {
+        const panel = document.getElementById("tab-gainers");
+        panel.innerHTML = '<div class="loading">SCANNING DAY GAINERS...</div>';
+        try {
+            const res = await fetch("/api/gainers");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+v.toFixed(2)},
+                {key:"changePct",label:"CHG%",fmt:(v)=>`<span class="green">+${v.toFixed(2)}%</span>`},
+                {key:"change",label:"CHG $",fmt:(v)=>`<span class="green">+$${v.toFixed(2)}</span>`},
+                {key:"volume",label:"VOLUME",fmt:Screener.formatVolume},
+                {key:"marketCap",label:"MKT CAP",fmt:Screener.formatMarketCap}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async loadTrending() {
+        const panel = document.getElementById("tab-trending");
+        panel.innerHTML = '<div class="loading">SCANNING TRENDING STOCKS...</div>';
+        try {
+            const res = await fetch("/api/trending");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+v.toFixed(2)},
+                {key:"changePct",label:"CHG%",fmt:(v)=>`<span class="${v>=0?'green':'red'}">${v>=0?'+':''}${v.toFixed(2)}%</span>`},
+                {key:"volRatio",label:"VOL RATIO",fmt:v=>v.toFixed(1)+"x"},
+                {key:"trendScore",label:"TREND SCORE",fmt:v=>`<span style="color:var(--orange)">${v.toFixed(0)}</span>`},
+                {key:"volume",label:"VOLUME",fmt:Screener.formatVolume}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async loadDividend() {
+        const panel = document.getElementById("tab-dividend");
+        panel.innerHTML = '<div class="loading">SCANNING HIGHEST DIVIDEND...</div>';
+        try {
+            const res = await fetch("/api/dividend");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+(v||0).toFixed(2)},
+                {key:"dividendYield",label:"DIV YIELD",fmt:v=>`<span class="green">${v.toFixed(2)}%</span>`},
+                {key:"pe",label:"P/E",fmt:v=>v ? v.toFixed(1) : "—"},
+                {key:"eps",label:"EPS",fmt:v=>v ? "$"+v.toFixed(2) : "—"},
+                {key:"marketCap",label:"MKT CAP",fmt:Screener.formatMarketCap}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async loadSmallCap() {
+        const panel = document.getElementById("tab-smallcap");
+        panel.innerHTML = '<div class="loading">SCANNING SMALL CAP STOCKS...</div>';
+        try {
+            const res = await fetch("/api/small-cap");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+(v||0).toFixed(2)},
+                {key:"changePct",label:"CHG%",fmt:(v)=>`<span class="${v>=0?'green':'red'}">${v>=0?'+':''}${v.toFixed(2)}%</span>`},
+                {key:"marketCap",label:"MKT CAP",fmt:Screener.formatMarketCap},
+                {key:"beta",label:"BETA",fmt:v=>v ? v.toFixed(2) : "—"},
+                {key:"volume",label:"VOLUME",fmt:Screener.formatVolume}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async loadLargeCap() {
+        const panel = document.getElementById("tab-largecap");
+        panel.innerHTML = '<div class="loading">SCANNING LARGE CAP STOCKS...</div>';
+        try {
+            const res = await fetch("/api/large-cap");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+(v||0).toFixed(2)},
+                {key:"changePct",label:"CHG%",fmt:(v)=>`<span class="${v>=0?'green':'red'}">${v>=0?'+':''}${v.toFixed(2)}%</span>`},
+                {key:"marketCap",label:"MKT CAP",fmt:Screener.formatMarketCap},
+                {key:"pe",label:"P/E",fmt:v=>v ? v.toFixed(1) : "—"},
+                {key:"volume",label:"VOLUME",fmt:Screener.formatVolume}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async loadExpensive() {
+        const panel = document.getElementById("tab-expensive");
+        panel.innerHTML = '<div class="loading">SCANNING MOST EXPENSIVE...</div>';
+        try {
+            const res = await fetch("/api/expensive");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>`<span style="color:var(--orange)">$${v.toFixed(2)}</span>`},
+                {key:"changePct",label:"CHG%",fmt:(v)=>`<span class="${v>=0?'green':'red'}">${v>=0?'+':''}${v.toFixed(2)}%</span>`},
+                {key:"pe",label:"P/E",fmt:v=>v ? v.toFixed(1) : "—"},
+                {key:"marketCap",label:"MKT CAP",fmt:Screener.formatMarketCap},
+                {key:"volume",label:"VOLUME",fmt:Screener.formatVolume}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async loadHighBeta() {
+        const panel = document.getElementById("tab-highbeta");
+        panel.innerHTML = '<div class="loading">SCANNING HIGHEST BETA...</div>';
+        try {
+            const res = await fetch("/api/high-beta");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+(v||0).toFixed(2)},
+                {key:"beta",label:"BETA",fmt:v=>`<span style="color:${v>2?'var(--red)':v>1.5?'var(--orange)':'var(--text)'}">${v.toFixed(2)}</span>`},
+                {key:"changePct",label:"CHG%",fmt:(v)=>`<span class="${v>=0?'green':'red'}">${v>=0?'+':''}${v.toFixed(2)}%</span>`},
+                {key:"marketCap",label:"MKT CAP",fmt:Screener.formatMarketCap},
+                {key:"volume",label:"VOLUME",fmt:Screener.formatVolume}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async loadUnusualVol() {
+        const panel = document.getElementById("tab-unusualvol");
+        panel.innerHTML = '<div class="loading">SCANNING UNUSUAL VOLUME...</div>';
+        try {
+            const res = await fetch("/api/unusual-volume");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+v.toFixed(2)},
+                {key:"changePct",label:"CHG%",fmt:(v)=>`<span class="${v>=0?'green':'red'}">${v>=0?'+':''}${v.toFixed(2)}%</span>`},
+                {key:"volRatio",label:"VOL RATIO",fmt:v=>`<span style="color:var(--orange)">${v.toFixed(1)}x</span>`},
+                {key:"volume",label:"VOLUME",fmt:Screener.formatVolume},
+                {key:"avgVolume",label:"AVG VOL",fmt:Screener.formatVolume}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async load52wGainers() {
+        const panel = document.getElementById("tab-52wgainers");
+        panel.innerHTML = '<div class="loading">SCANNING 52-WEEK GAINERS...</div>';
+        try {
+            const res = await fetch("/api/52w-gainers");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+v.toFixed(2)},
+                {key:"gainFromLow",label:"GAIN FROM 52W LOW",fmt:v=>`<span class="green">+${v.toFixed(1)}%</span>`},
+                {key:"fiftyTwoWeekLow",label:"52W LOW",fmt:v=>"$"+v.toFixed(2)},
+                {key:"fiftyTwoWeekHigh",label:"52W HIGH",fmt:v=>"$"+v.toFixed(2)},
+                {key:"pctOfHigh",label:"% OF HIGH",fmt:v=>v.toFixed(1)+"%"}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
+    async load52wLosers() {
+        const panel = document.getElementById("tab-52wlosers");
+        panel.innerHTML = '<div class="loading">SCANNING 52-WEEK LOSERS...</div>';
+        try {
+            const res = await fetch("/api/52w-losers");
+            const data = await res.json();
+            panel.innerHTML = this._buildTable(data, [
+                {key:"ticker",label:"TICKER",fmt:v=>`<span class="ticker">${v}</span>`},
+                {key:"name",label:"NAME",fmt:v=>Screener.truncate(v,20)},
+                {key:"price",label:"PRICE",fmt:v=>"$"+v.toFixed(2)},
+                {key:"dropFromHigh",label:"DROP FROM 52W HIGH",fmt:v=>`<span class="red">${v.toFixed(1)}%</span>`},
+                {key:"fiftyTwoWeekHigh",label:"52W HIGH",fmt:v=>"$"+v.toFixed(2)},
+                {key:"fiftyTwoWeekLow",label:"52W LOW",fmt:v=>"$"+v.toFixed(2)},
+                {key:"pctOfHigh",label:"% OF HIGH",fmt:v=>v.toFixed(1)+"%"}
+            ]);
+        } catch(e) { panel.innerHTML = '<div class="loading error">FAILED</div>'; }
+    },
+
     async loadVolatile() {
         const panel = document.getElementById("tab-volatile");
         panel.innerHTML = '<div class="loading">SCANNING MOST VOLATILE...</div>';

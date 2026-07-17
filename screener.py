@@ -15,13 +15,12 @@ def run_screener(min_volume=0, max_volume=None, sector=None, min_price=0,
         if not quote:
             continue
         close = quote.get("close", 0)
-        open_price = quote.get("open", 0)
         volume = quote.get("volume", 0)
         market_cap = info.get("marketCap", 0)
         avg_volume = info.get("avgVolume", 0)
         sector_name = info.get("sector", "N/A")
-        change = close - open_price if open_price else 0
-        change_pct = (change / open_price) * 100 if open_price else 0
+        change = quote.get("change", 0)
+        change_pct = quote.get("changePct", 0)
         if volume < min_volume: continue
         if max_volume and volume > max_volume: continue
         if sector and sector.lower() != "all" and sector.lower() != sector_name.lower(): continue
@@ -33,7 +32,7 @@ def run_screener(min_volume=0, max_volume=None, sector=None, min_price=0,
         vol_ratio = (volume / avg_volume) if avg_volume > 0 else 0
         results.append({
             "ticker": ticker, "name": info.get("name", ticker),
-            "price": round(close, 2), "open": round(open_price, 2),
+            "price": round(close, 2), "open": round(quote.get("open", 0), 2),
             "high": round(quote.get("high", 0), 2), "low": round(quote.get("low", 0), 2),
             "change": round(change, 2), "changePct": round(change_pct, 2),
             "volume": volume, "avgVolume": avg_volume, "volRatio": round(vol_ratio, 2),

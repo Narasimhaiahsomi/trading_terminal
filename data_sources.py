@@ -93,7 +93,7 @@ def _fetch_batch(tickers, max_age=30):
     if cached is not None:
         return cached
     try:
-        data = yf.download(tickers, period="1d", group_by="ticker", progress=False, threads=True)
+        data = yf.download(tickers, period="2d", group_by="ticker", progress=False, threads=True)
         result = {}
         for ticker in tickers:
             try:
@@ -101,12 +101,19 @@ def _fetch_batch(tickers, max_age=30):
                 if row.empty:
                     continue
                 last = row.iloc[-1]
+                prev_close = _safe_float(row.iloc[-2].get("Close")) if len(row) > 1 else _safe_float(last.get("Open"))
+                close = _safe_float(last.get("Close"))
+                change = close - prev_close if prev_close else 0
+                change_pct = (change / prev_close * 100) if prev_close else 0
                 result[ticker] = {
                     "open": _safe_float(last.get("Open")),
                     "high": _safe_float(last.get("High")),
                     "low": _safe_float(last.get("Low")),
-                    "close": _safe_float(last.get("Close")),
+                    "close": close,
                     "volume": _safe_int(last.get("Volume")),
+                    "prevClose": prev_close,
+                    "change": round(change, 2),
+                    "changePct": round(change_pct, 2),
                 }
             except Exception:
                 continue
@@ -289,12 +296,11 @@ def get_most_volatile(limit=20):
         q = quotes.get(ticker)
         if not q:
             continue
-        high, low, close, open_p = q.get("high", 0), q.get("low", 0), q.get("close", 0), q.get("open", 0)
+        high, low, close = q.get("high", 0), q.get("low", 0), q.get("close", 0)
         intraday_range = ((high - low) / close) * 100 if low > 0 and close > 0 else 0
-        change_pct = ((close - open_p) / open_p * 100) if open_p else 0
         info = info_map.get(ticker, {})
         results.append({"ticker": ticker, "name": info.get("name", ticker),
-            "price": round(close, 2), "changePct": round(change_pct, 2),
+            "price": round(close, 2), "changePct": q.get("changePct", 0),
             "high": round(high, 2), "low": round(low, 2),
             "range": round(intraday_range, 2), "volume": q.get("volume", 0),
             "sector": info.get("sector", "N/A")})
@@ -314,12 +320,11 @@ def get_most_active(limit=20):
         q = quotes.get(ticker)
         if not q:
             continue
-        close, open_p, volume = q.get("close", 0), q.get("open", 0), q.get("volume", 0)
+        close, volume = q.get("close", 0), q.get("volume", 0)
         info = info_map.get(ticker, {})
         avg_vol = info.get("avgVolume", 0)
-        change_pct = ((close - open_p) / open_p * 100) if open_p else 0
         results.append({"ticker": ticker, "name": info.get("name", ticker),
-            "price": round(close, 2), "changePct": round(change_pct, 2),
+            "price": round(close, 2), "changePct": q.get("changePct", 0),
             "volume": volume, "avgVolume": avg_vol,
             "dollarVolume": round(close * volume, 0),
             "volRatio": round(volume / avg_vol, 2) if avg_vol else 0,
@@ -340,13 +345,13 @@ def get_biggest_losers(limit=20):
         q = quotes.get(ticker)
         if not q:
             continue
-        close, open_p = q.get("close", 0), q.get("open", 0)
-        change_pct = ((close - open_p) / open_p * 100) if open_p else 0
+        close = q.get("close", 0)
+        change_pct = q.get("changePct", 0)
         info = info_map.get(ticker, {})
         if change_pct < 0:
             results.append({"ticker": ticker, "name": info.get("name", ticker),
-                "price": round(close, 2), "change": round(close - open_p, 2),
-                "changePct": round(change_pct, 2), "volume": q.get("volume", 0),
+                "price": round(close, 2), "change": q.get("change", 0),
+                "changePct": change_pct, "volume": q.get("volume", 0),
                 "marketCap": info.get("marketCap", 0), "sector": info.get("sector", "N/A")})
     results.sort(key=lambda x: x["changePct"])
     cache.set("biggest_losers", results)
@@ -389,6 +394,247 @@ def _get_ah_data(ticker):
             "source": "post" if info.get("postMarketPrice") else "pre"}
     except Exception:
         return None
+
+
+def get_day_gainers(limit=20):
+    cached = cache.get("day_gainers", max_age=30)
+    if cached is not None:
+        return cached[:limit]
+    quotes = get_quotes(ALL_UNIVERSE)
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        q = quotes.get(ticker)
+        if not q:
+            continue
+        close = q.get("close", 0)
+        change_pct = q.get("changePct", 0)
+        info = info_map.get(ticker, {})
+        if change_pct > 0:
+            results.append({"ticker": ticker, "name": info.get("name", ticker),
+                "price": round(close, 2), "change": q.get("change", 0),
+                "changePct": change_pct, "volume": q.get("volume", 0),
+                "marketCap": info.get("marketCap", 0), "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["changePct"], reverse=True)
+    cache.set("day_gainers", results)
+    return results[:limit]
+
+
+def get_trending(limit=20):
+    cached = cache.get("trending", max_age=30)
+    if cached is not None:
+        return cached[:limit]
+    quotes = get_quotes(ALL_UNIVERSE)
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        q = quotes.get(ticker)
+        if not q:
+            continue
+        close, volume = q.get("close", 0), q.get("volume", 0)
+        change_pct = q.get("changePct", 0)
+        info = info_map.get(ticker, {})
+        avg_vol = info.get("avgVolume", 0)
+        vol_ratio = (volume / avg_vol) if avg_vol else 0
+        trend_score = abs(change_pct) * vol_ratio
+        results.append({"ticker": ticker, "name": info.get("name", ticker),
+            "price": round(close, 2), "changePct": round(change_pct, 2),
+            "volume": volume, "volRatio": round(vol_ratio, 2),
+            "trendScore": round(trend_score, 1),
+            "marketCap": info.get("marketCap", 0), "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["trendScore"], reverse=True)
+    cache.set("trending", results)
+    return results[:limit]
+
+
+def get_highest_dividend(limit=20):
+    cached = cache.get("highest_dividend", max_age=300)
+    if cached is not None:
+        return cached[:limit]
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        info = info_map.get(ticker, {})
+        div_yield = info.get("dividend", 0) or 0
+        if div_yield > 0:
+            dy_pct = round(div_yield, 2) if div_yield > 1 else round(div_yield * 100, 2)
+            if dy_pct > 15:
+                continue
+            results.append({"ticker": ticker, "name": info.get("name", ticker),
+                "price": info.get("price", 0) or info.get("close", 0),
+                "dividendYield": dy_pct,
+                "pe": info.get("pe", 0), "eps": info.get("eps", 0),
+                "marketCap": info.get("marketCap", 0), "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["dividendYield"], reverse=True)
+    cache.set("highest_dividend", results)
+    return results[:limit]
+
+
+def get_small_cap(limit=20):
+    cached = cache.get("small_cap", max_age=300)
+    if cached is not None:
+        return cached[:limit]
+    quotes = get_quotes(ALL_UNIVERSE)
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        info = info_map.get(ticker, {})
+        q = quotes.get(ticker, {})
+        mcap = info.get("marketCap", 0)
+        if 0 < mcap <= 2e9:
+            close = q.get("close", 0)
+            results.append({"ticker": ticker, "name": info.get("name", ticker),
+                "price": round(close, 2) if close else round(info.get("price", 0), 2),
+                "changePct": q.get("changePct", 0),
+                "volume": q.get("volume", 0), "marketCap": mcap,
+                "beta": info.get("beta", 0), "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["marketCap"])
+    cache.set("small_cap", results)
+    return results[:limit]
+
+
+def get_large_cap(limit=20):
+    cached = cache.get("large_cap", max_age=300)
+    if cached is not None:
+        return cached[:limit]
+    quotes = get_quotes(ALL_UNIVERSE)
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        info = info_map.get(ticker, {})
+        q = quotes.get(ticker, {})
+        mcap = info.get("marketCap", 0)
+        if mcap >= 200e9:
+            close = q.get("close", 0)
+            results.append({"ticker": ticker, "name": info.get("name", ticker),
+                "price": round(close, 2) if close else round(info.get("price", 0), 2),
+                "changePct": q.get("changePct", 0),
+                "volume": q.get("volume", 0), "marketCap": mcap,
+                "pe": info.get("pe", 0), "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["marketCap"], reverse=True)
+    cache.set("large_cap", results)
+    return results[:limit]
+
+
+def get_most_expensive(limit=20):
+    cached = cache.get("most_expensive", max_age=30)
+    if cached is not None:
+        return cached[:limit]
+    quotes = get_quotes(ALL_UNIVERSE)
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        q = quotes.get(ticker)
+        if not q:
+            continue
+        close = q.get("close", 0)
+        info = info_map.get(ticker, {})
+        results.append({"ticker": ticker, "name": info.get("name", ticker),
+            "price": round(close, 2), "changePct": q.get("changePct", 0),
+            "volume": q.get("volume", 0), "marketCap": info.get("marketCap", 0),
+            "pe": info.get("pe", 0), "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["price"], reverse=True)
+    cache.set("most_expensive", results)
+    return results[:limit]
+
+
+def get_highest_beta(limit=20):
+    cached = cache.get("highest_beta", max_age=300)
+    if cached is not None:
+        return cached[:limit]
+    quotes = get_quotes(ALL_UNIVERSE)
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        info = info_map.get(ticker, {})
+        q = quotes.get(ticker, {})
+        beta = info.get("beta", 0)
+        if beta and beta > 0:
+            close = q.get("close", 0)
+            results.append({"ticker": ticker, "name": info.get("name", ticker),
+                "price": round(close, 2) if close else round(info.get("price", 0), 2),
+                "changePct": q.get("changePct", 0), "beta": round(beta, 2),
+                "volume": q.get("volume", 0), "marketCap": info.get("marketCap", 0),
+                "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["beta"], reverse=True)
+    cache.set("highest_beta", results)
+    return results[:limit]
+
+
+def get_unusual_volume(limit=20):
+    cached = cache.get("unusual_volume", max_age=30)
+    if cached is not None:
+        return cached[:limit]
+    quotes = get_quotes(ALL_UNIVERSE)
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        q = quotes.get(ticker)
+        if not q:
+            continue
+        close, volume = q.get("close", 0), q.get("volume", 0)
+        info = info_map.get(ticker, {})
+        avg_vol = info.get("avgVolume", 0)
+        if avg_vol > 0 and volume > avg_vol * 1.5:
+            vol_ratio = volume / avg_vol
+            results.append({"ticker": ticker, "name": info.get("name", ticker),
+                "price": round(close, 2), "changePct": q.get("changePct", 0),
+                "volume": volume, "avgVolume": avg_vol,
+                "volRatio": round(vol_ratio, 2),
+                "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["volRatio"], reverse=True)
+    cache.set("unusual_volume", results)
+    return results[:limit]
+
+
+def get_52w_gainers(limit=20):
+    cached = cache.get("52w_gainers", max_age=300)
+    if cached is not None:
+        return cached[:limit]
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        info = info_map.get(ticker, {})
+        price = info.get("price", 0) or info.get("close", 0)
+        low_52 = info.get("fiftyTwoWeekLow", 0)
+        high_52 = info.get("fiftyTwoWeekHigh", 0)
+        if low_52 and low_52 > 0 and price > 0:
+            gain_from_low = ((price - low_52) / low_52) * 100
+            pct_of_high = (price / high_52 * 100) if high_52 else 0
+            results.append({"ticker": ticker, "name": info.get("name", ticker),
+                "price": round(price, 2), "fiftyTwoWeekLow": round(low_52, 2),
+                "fiftyTwoWeekHigh": round(high_52, 2),
+                "gainFromLow": round(gain_from_low, 1),
+                "pctOfHigh": round(pct_of_high, 1),
+                "marketCap": info.get("marketCap", 0), "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["gainFromLow"], reverse=True)
+    cache.set("52w_gainers", results)
+    return results[:limit]
+
+
+def get_52w_losers(limit=20):
+    cached = cache.get("52w_losers", max_age=300)
+    if cached is not None:
+        return cached[:limit]
+    info_map = get_bulk_info(ALL_UNIVERSE)
+    results = []
+    for ticker in ALL_UNIVERSE:
+        info = info_map.get(ticker, {})
+        price = info.get("price", 0) or info.get("close", 0)
+        high_52 = info.get("fiftyTwoWeekHigh", 0)
+        low_52 = info.get("fiftyTwoWeekLow", 0)
+        if high_52 and high_52 > 0 and price > 0:
+            drop_from_high = ((price - high_52) / high_52) * 100
+            pct_of_high = (price / high_52 * 100) if high_52 else 0
+            results.append({"ticker": ticker, "name": info.get("name", ticker),
+                "price": round(price, 2), "fiftyTwoWeekHigh": round(high_52, 2),
+                "fiftyTwoWeekLow": round(low_52, 2),
+                "dropFromHigh": round(drop_from_high, 1),
+                "pctOfHigh": round(pct_of_high, 1),
+                "marketCap": info.get("marketCap", 0), "sector": info.get("sector", "N/A")})
+    results.sort(key=lambda x: x["dropFromHigh"])
+    cache.set("52w_losers", results)
+    return results[:limit]
 
 
 def get_stock_news(ticker, limit=5):

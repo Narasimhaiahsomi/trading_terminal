@@ -46,8 +46,15 @@ body { font-family: 'JetBrains Mono', monospace; background: var(--bg-primary); 
 /* MAIN LAYOUT */
 .main-layout { display: flex; height: calc(100vh - 44px - 28px - 30px); }
 
+/* WATCHLIST TOGGLE BAR */
+.wl-toggle-bar { display: none; width: 24px; min-width: 24px; background: var(--bg-secondary); border-right: 1px solid var(--border); cursor: pointer; flex-direction: column; align-items: center; padding-top: 12px; gap: 6px; color: var(--text-dim); font-size: 10px; transition: background 0.15s; }
+.wl-toggle-bar:hover { background: var(--bg-hover); color: var(--orange); }
+.wl-toggle-bar.show { display: flex; }
+.wl-toggle-label { letter-spacing: 2px; font-weight: 600; font-size: 9px; }
+
 /* WATCHLIST */
-.watchlist-panel { width: 260px; min-width: 260px; background: var(--bg-secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.watchlist-panel { width: 260px; min-width: 260px; background: var(--bg-secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: width 0.2s, min-width 0.2s, padding 0.2s; overflow: hidden; }
+.watchlist-panel.collapsed { width: 0; min-width: 0; border-right: none; padding: 0; }
 .wl-header { padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
 .wl-header h3 { font-size: 11px; color: var(--orange); font-weight: 600; letter-spacing: 1px; }
 .wl-header button { background: none; border: 1px solid var(--border); color: var(--orange); cursor: pointer; padding: 2px 8px; font-family: inherit; font-size: 11px; }
