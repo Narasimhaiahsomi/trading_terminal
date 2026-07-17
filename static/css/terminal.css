@@ -81,6 +81,20 @@ body { font-family: 'JetBrains Mono', monospace; background: var(--bg-primary); 
 .tab-panel { display: none; padding: 12px; height: 100%; overflow: auto; }
 .tab-panel.active { display: block; }
 
+/* PRESET BAR */
+.preset-bar { margin-bottom: 10px; }
+.preset-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.preset-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-dim); font-family: inherit; font-size: 11px; cursor: pointer; transition: all 0.15s; position: relative; }
+.preset-btn:hover { border-color: var(--orange); color: var(--text); background: var(--bg-hover); }
+.preset-btn.active { border-color: var(--orange); color: var(--orange); background: #ff8c0015; }
+.preset-icon { font-size: 13px; }
+.preset-name { font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.preset-del { margin-left: 4px; color: var(--text-dim); font-size: 13px; line-height: 1; }
+.preset-del:hover { color: var(--red); }
+.preset-btn.preset-add { border-style: dashed; }
+.preset-btn.preset-add:hover { border-color: var(--green); color: var(--green); }
+.screener-count { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.5px; }
+
 /* SCREENER FILTERS */
 .screener-filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .screener-filters input, .screener-filters select { background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; font-family: inherit; font-size: 11px; outline: none; }
