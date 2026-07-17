@@ -14,6 +14,8 @@ const Screener = {
         { id: "energy", name: "Energy", icon: "🛢", filters: { min_volume: "500000", sector: "Energy", min_price: "", max_price: "", sort: "volume" }, desc: "Oil, gas & energy sector" },
         { id: "finance", name: "Finance", icon: "🏦", filters: { min_volume: "500000", sector: "Financial Services", min_price: "", max_price: "", sort: "volume" }, desc: "Banks & financial services" },
         { id: "health", name: "Healthcare", icon: "🏥", filters: { min_volume: "500000", sector: "Healthcare", min_price: "", max_price: "", sort: "volume" }, desc: "Pharma, biotech & healthcare" },
+        { id: "volatile", name: "Most Volatile", icon: "🔥", tab: "volatile", desc: "Biggest intraday price swings" },
+        { id: "squeeze", name: "Short Squeeze", icon: "🚀", tab: "squeeze", desc: "High short interest squeeze candidates" },
     ],
 
     init() {
@@ -54,6 +56,10 @@ const Screener = {
         const preset = this.getAllPresets().find(p => p.id === id);
         if (!preset) return;
         this.activePreset = id;
+        if (preset.tab) {
+            App.switchTab(preset.tab);
+            return;
+        }
         this.sortCol = preset.filters.sort || "volume";
         this.sortDir = "desc";
         this.load(preset.filters);
