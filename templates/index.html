@@ -40,23 +40,28 @@
         <!-- SCREENER / TABS AREA -->
         <div class="screener-area">
             <div class="tab-bar">
+                <div class="version-toggle" onclick="App.toggleVersion()">
+                    <span class="ver-label" id="ver-label">V1</span>
+                </div>
+                <!-- V1 tabs (always visible) -->
                 <button class="tab-btn active" data-tab="screener">SCREENER</button>
-                <button class="tab-btn" data-tab="gainers">GAINERS</button>
-                <button class="tab-btn" data-tab="losers">LOSERS</button>
-                <button class="tab-btn" data-tab="active">MOST ACTIVE</button>
                 <button class="tab-btn" data-tab="volatile">VOLATILE</button>
-                <button class="tab-btn" data-tab="trending">TRENDING</button>
-                <button class="tab-btn" data-tab="unusualvol">UNUSUAL VOL</button>
-                <button class="tab-btn" data-tab="dividend">DIVIDEND</button>
-                <button class="tab-btn" data-tab="smallcap">SMALL CAP</button>
-                <button class="tab-btn" data-tab="largecap">LARGE CAP</button>
-                <button class="tab-btn" data-tab="expensive">EXPENSIVE</button>
-                <button class="tab-btn" data-tab="highbeta">HIGH BETA</button>
-                <button class="tab-btn" data-tab="52wgainers">52W GAINERS</button>
-                <button class="tab-btn" data-tab="52wlosers">52W LOSERS</button>
+                <button class="tab-btn" data-tab="active">MOST ACTIVE</button>
+                <button class="tab-btn" data-tab="losers">LOSERS</button>
                 <button class="tab-btn" data-tab="afterhours">AFTER HRS</button>
                 <button class="tab-btn" data-tab="squeeze">SHORT SQUEEZE</button>
                 <button class="tab-btn" data-tab="learn">LEARN</button>
+                <!-- V2 tabs (hidden by default) -->
+                <button class="tab-btn v2-tab" data-tab="gainers">GAINERS</button>
+                <button class="tab-btn v2-tab" data-tab="trending">TRENDING</button>
+                <button class="tab-btn v2-tab" data-tab="unusualvol">UNUSUAL VOL</button>
+                <button class="tab-btn v2-tab" data-tab="dividend">DIVIDEND</button>
+                <button class="tab-btn v2-tab" data-tab="smallcap">SMALL CAP</button>
+                <button class="tab-btn v2-tab" data-tab="largecap">LARGE CAP</button>
+                <button class="tab-btn v2-tab" data-tab="expensive">EXPENSIVE</button>
+                <button class="tab-btn v2-tab" data-tab="highbeta">HIGH BETA</button>
+                <button class="tab-btn v2-tab" data-tab="52wgainers">52W GAINERS</button>
+                <button class="tab-btn v2-tab" data-tab="52wlosers">52W LOSERS</button>
             </div>
             <div class="tab-content">
                 <div class="tab-panel active" id="tab-screener"><div class="loading">LOADING...</div></div>

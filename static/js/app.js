@@ -1,8 +1,10 @@
 const App = {
     currentTab: "screener",
     refreshInterval: null,
+    version: localStorage.getItem("tt_version") || "v1",
 
     init() {
+        this.applyVersion();
         this.bindEvents();
         this.loadMarketOverview();
         this.loadSectors();
@@ -10,6 +12,22 @@ const App = {
         Alerts.init();
         Screener.load();
         this.refreshInterval = setInterval(() => this.refresh(), 30000);
+    },
+
+    toggleVersion() {
+        this.version = this.version === "v1" ? "v2" : "v1";
+        localStorage.setItem("tt_version", this.version);
+        this.applyVersion();
+    },
+
+    applyVersion() {
+        const isV2 = this.version === "v2";
+        document.querySelectorAll(".v2-tab").forEach(t => t.style.display = isV2 ? "" : "none");
+        const label = document.getElementById("ver-label");
+        if (label) {
+            label.textContent = isV2 ? "V2" : "V1";
+            label.classList.toggle("v2", isV2);
+        }
     },
 
     bindEvents() {
